@@ -1,0 +1,225 @@
+import yt_dlp
+import tkinter as tk
+from tkinter import ttk, messagebox, font
+import threading
+import os
+import sys
+from PIL import Image, ImageTk
+
+# --- إعدادات الألوان والخطوط (Light Mode Professional) ---
+BG_COLOR = "#f0f2f5"      # خلفية رمادية فاتحة جداً
+CARD_BG = "#FFFFFF"      # بطاقة بيضاء
+SHADOW_COLOR = "#e4e6eb" # لون الظل
+ACCENT_COLOR = "#1877f2" # لون أزرق (شبيه فيسبوك)
+ACCENT_HOVER = "#166fe5" # لون أزرق أغمق
+SUCCESS_COLOR = "#42b983" # لون أخضر للنجاح
+ERROR_COLOR = "#fa383e"   # لون أحمر للخطأ
+TEXT_COLOR = "#1c1e21"   # لون النص الأسود
+SUBTLE_TEXT = "#606770" # لون نص ثانوي
+FONT_FAMILY = "SF Pro Display" # خط حديث على الماك
+FONT_SIZE = 13
+
+# --- دوال مساعدة ---
+
+def resource_path(relative_path):
+    """للحصول على مسار الملفات داخل حزمة التطبيق"""
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+def get_desktop_path():
+    """للحصول على مسار سطح المكتب"""
+    return os.path.join(os.path.expanduser('~'), 'Desktop')
+
+def fetch_video_info():
+    """جلب معلومات الفيديو (العنوان) عند لصق الرابط"""
+    url = url_entry.get()
+    if not url:
+        title_label.config(text="🔗 لصق رابط الفيديو أو الصوت...", fg=SUBTLE_TEXT)
+        return
+
+    try:
+        # استخدام yt-dlp للتحقق من الرابط وجلب المعلومات
+        with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
+            info_dict = ydl.extract_info(url, download=False)
+            video_title = info_dict.get('title', 'عنوان غير متوفر')
+            title_label.config(text=f"📹 {video_title[:60]}...", fg=TEXT_COLOR)
+    except Exception:
+        title_label.config(text="❌ لم يتم العثور على الفيديو.", fg=ERROR_COLOR)
+
+# --- دوال التحميل ---
+
+def progress_hook(d):
+    """تحديث شريط التقدم مع تغيير الألوان"""
+    if d['status'] == 'downloading':
+        total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
+        downloaded_bytes = d.get('downloaded_bytes', 0)
+        if total_bytes > 0:
+            percentage = (downloaded_bytes / total_bytes) * 100
+            progress_bar['value'] = percentage
+            status_label.config(text=f"🚀 جاري التحميل... {percentage:.1f}%", fg=TEXT_COLOR)
+            root.update_idletasks()
+    elif d['status'] == 'finished':
+        status_label.config(text="⚙️ جاري المعالجة النهائية للملف...", fg=SUCCESS_COLOR)
+        progress_bar['value'] = 100
+
+def start_download():
+    """بدء عملية التحميل"""
+    url = url_entry.get()
+    if not url:
+        messagebox.showerror("خطأ في الرابط", "الرجاء إدخال رابط.")
+        return
+
+    choice = format_var.get()
+    desktop_path = get_desktop_path()
+    
+    # تعطيل الواجهة أثناء التحميل
+    download_button.config(state=tk.DISABLED)
+    url_entry.config(state=tk.DISABLED)
+    progress_bar['value'] = 0
+    status_label.config(text="⏳ يبدأ التحميل...", fg=TEXT_COLOR)
+
+    ydl_opts = {
+        'outtmpl': os.path.join(desktop_path, '%(title)s.%(ext)s'),
+        'progress_hooks': [progress_hook],
+    }
+
+    # --- تحسين مكان ffmpeg ---
+    ffmpeg_path = resource_path('ffmpeg')
+    if os.path.isfile(ffmpeg_path) and os.access(ffmpeg_path, os.X_OK):
+        ydl_opts['ffmpeg_location'] = ffmpeg_path
+        print("Using bundled ffmpeg.")
+    else:
+        print("Using system ffmpeg.")
+        
+    try:
+        if choice == 'mp4':
+            ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best'
+            ydl_opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': 'mp4'}]
+            status_label.config(text="🎬 جاري تحميل الفيديو بأفضل جودة...")
+        
+        elif choice == 'mp3':
+            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}]
+            status_label.config(text="🎵 جاري تحميل الصوت وتحويله...")
+        
+        download_thread = threading.Thread(target=run_download, args=(url, ydl_opts), daemon=True).start()
+
+    except Exception as e:
+        messagebox.showerror("خطأ في الإعدادات", f"حدث خطأ: {e}")
+        reset_ui()
+
+def run_download(url, opts):
+    """الدالة الفعلية للتحميل في خيط منفصل"""
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            ydl.download([url])
+        root.after(0, lambda: messagebox.showinfo("✅ اكتمل التحميل", f"تم حفظ الملف بنجاح على سطح المكتب!"))
+    except Exception as e:
+        error_message = f"فشل التحميل.\n\nالسبب المحتمل:\n{str(e)}"
+        root.after(0, lambda: messagebox.showerror("❌ خطأ في التحميل", error_message))
+    finally:
+        root.after(0, reset_ui)
+
+def reset_ui():
+    """إعادة تعيين حالة الواجهة"""
+    download_button.config(state=tk.NORMAL)
+    url_entry.config(state=tk.NORMAL)
+    progress_bar['value'] = 0
+    status_label.config(text=" جاهز لبدء التحميل", fg=SUBTLE_TEXT)
+    fetch_video_info() # إعادة البحث عن الفيديو الحالي
+
+# --- إنشاء الواجهة الرسومية ---
+root = tk.Tk()
+root.title("App Downloader Pro")
+root.geometry("650x550")
+root.configure(bg=BG_COLOR)
+root.resizable(False, False)
+# --- أهم سطر: إرجاع النافذة العادية ---
+root.overrideredirect(False) # دي بتخبر الماك يستخدم النافذة العادية بتاعته
+
+# --- تحميل الأيقونات ---
+try:
+    download_img = ImageTk.PhotoImage(Image.open(resource_path("icons/download.png")).resize((24, 24), Image.Resampling.LANCZOS))
+    video_img = ImageTk.PhotoImage(Image.open(resource_path("icons/video.png")).resize((20, 20), Image.Resampling.LANCZOS))
+    audio_img = ImageTk.PhotoImage(Image.open(resource_path("icons/music.png")).resize((20, 20), Image.Resampling.LANCZOS))
+except Exception as e:
+    print(f"Warning: Could not load icons: {e}")
+    download_img = video_img = audio_img = None
+
+# --- تخصيص شكل الأدوات (Styling) ---
+style = ttk.Style(root)
+style.theme_use('clam')
+style.configure('TFrame', background=CARD_BG, borderwidth=0)
+style.configure('Card.TFrame', background=CARD_BG, relief='solid', borderwidth=1)
+style.configure('Shadow.TFrame', background=SHADOW_COLOR, borderwidth=0)
+style.configure('TLabel', background=CARD_BG, foreground=TEXT_COLOR, font=(FONT_FAMILY, FONT_SIZE))
+style.configure('TButton', font=(FONT_FAMILY, FONT_SIZE, 'bold'), foreground='white', background=ACCENT_COLOR, borderwidth=0, focuscolor='none')
+style.map('TButton', background=[('active', ACCENT_HOVER), ('pressed', ACCENT_HOVER)])
+style.configure('TRadiobutton', background=CARD_BG, foreground=TEXT_COLOR, font=(FONT_FAMILY, FONT_SIZE))
+style.configure('TEntry', fieldbackground=BG_COLOR, borderwidth=1, font=(FONT_FAMILY, FONT_SIZE), insertcolor=TEXT_COLOR)
+style.map('TEntry', focuscolor=[('focus', ACCENT_COLOR)])
+style.configure('TProgressbar', background=ACCENT_COLOR, troughcolor=BG_COLOR, borderwidth=0, lightcolor=ACCENT_COLOR, darkcolor=ACCENT_COLOR)
+
+# --- إطار الظل (للعمق) ---
+shadow_frame = ttk.Frame(root, style='Shadow.TFrame')
+shadow_frame.pack(expand=True, fill='both', padx=22, pady=22)
+
+# --- البطاقة الرئيسية ---
+main_card = ttk.Frame(shadow_frame, padding="40", style='Card.TFrame')
+main_card.pack(expand=True, fill='both')
+
+# --- عناصر الواجهة ---
+# العنوان (الآن بسيط وجوه البطاقة)
+title_font = font.Font(family=FONT_FAMILY, size=22, weight="bold")
+title_label = tk.Label(main_card, text="App Downloader Pro", font=title_font, bg=CARD_BG, fg=TEXT_COLOR)
+title_label.grid(row=0, column=0, columnspan=2, pady=(0, 25))
+
+# حقل إدخال الرابط
+url_label = ttk.Label(main_card, text="🔗 لصق رابط الفيديو أو الصوت:")
+url_label.grid(row=1, column=0, columnspan=2, sticky="w", pady=(0, 5))
+
+url_entry = ttk.Entry(main_card, width=60, font=(FONT_FAMILY, FONT_SIZE))
+url_entry.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 5))
+url_entry.bind("<KeyRelease>", lambda event: fetch_video_info())
+url_entry.focus_set() # التركيز التلقائي
+
+# عرض عنوان الفيديو
+title_label = tk.Label(main_card, text="🔍 جاهز للبحث...", font=(FONT_FAMILY, FONT_SIZE - 1), bg=CARD_BG, fg=SUBTLE_TEXT)
+title_label.grid(row=3, column=0, columnspan=2, sticky="w", pady=(0, 20))
+
+# خيارات التنسيق (ظاهرة دائماً)
+format_frame = ttk.Frame(main_card, style='TFrame')
+format_frame.grid(row=4, column=0, columnspan=2, pady=10)
+
+format_var = tk.StringVar(value="mp4")
+mp4_radio = ttk.Radiobutton(format_frame, text=" MP4 (فيديو)", variable=format_var, value="mp4", image=video_img, compound='left')
+mp4_radio.pack(side="right", padx=20)
+mp3_radio = ttk.Radiobutton(format_frame, text=" MP3 (صوت)", variable=format_var, value="mp3", image=audio_img, compound='left')
+mp3_radio.pack(side="right", padx=20)
+
+# زر التحميل
+button_text = "  تحميل الآن"
+if download_img:
+    download_button = ttk.Button(main_card, text=button_text, image=download_img, compound=tk.LEFT, command=start_download)
+else:
+    download_button = ttk.Button(main_card, text=button_text, command=start_download)
+download_button.grid(row=5, column=0, columnspan=2, pady=20)
+if download_img: download_button.image = download_img
+
+# شريط التقدم
+progress_bar = ttk.Progressbar(main_card, orient="horizontal", length=550, mode='determinate')
+progress_bar.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(10, 5))
+
+# شريط الحالة
+status_label = tk.Label(main_card, text=" جاهز لبدء التحميل", font=(FONT_FAMILY, FONT_SIZE - 1), bg=CARD_BG, fg=SUBTLE_TEXT)
+status_label.grid(row=7, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+
+# تذييل الصفحة
+footer_label = tk.Label(main_card, text="Made by abdallah", font=(FONT_FAMILY, 10), bg=CARD_BG, fg=SUBTLE_TEXT)
+footer_label.grid(row=8, column=0, columnspan=2, pady=(15, 0))
+
+
+root.mainloop()
