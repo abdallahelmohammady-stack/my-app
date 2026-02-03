@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERSEC_PRO // ROADMAP_SYSTEM</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: Orbitron & Share Tech Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --cyber-black: #050505;
+            --cyber-cyan: #00f3ff;
+            --cyber-red: #ff003c;
+            --cyber-purple: #bc13fe;
+            --cyber-text: #e0e0e0;
+        }
+
+        body {
+            background-color: var(--cyber-black);
+            color: var(--cyber-text);
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+            /* Grid Background */
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            min-height: 100vh;
+        }
+
+        /* --- NEW: Floating Background Elements --- */
+        .cyber-particles {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            bottom: -50px;
+            color: rgba(0, 243, 255, 0.1);
+            font-size: 20px;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.5; }
+            80% { opacity: 0.5; }
+            100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Scan Beam Animation */
+        @keyframes scanline-move {
+            0% { transform: translateY(-10vh) skewY(-3deg); opacity: 0; }
+            10% { opacity: 0.6; box-shadow: 0 0 25px rgba(0, 243, 255, 0.3); }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(110vh) skewY(-3deg); opacity: 0; }
+        }
+
+        .cyber-scan-beam {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 50px;
+            background: linear-gradient(to bottom, transparent, rgba(0, 243, 255, 0.2), transparent);
+            z-index: 40;
+            pointer-events: none;
+            animation: scanline-move 4s linear infinite;
+        }
+
+        /* Static CRT Lines */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 50;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Glitch Text Effect on Hover */
+        .glitch-hover {
+            position: relative;
+            display: inline-block;
+        }
+        .glitch-hover:hover {
+            animation: glitch-anim 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            color: var(--cyber-cyan);
+            text-shadow: 2px 0 var(--cyber-red), -2px 0 var(--cyber-purple);
+        }
+        @keyframes glitch-anim {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+
+        /* Card Pulse Animation */
+        .pulse-border {
+            animation: borderPulse 3s infinite alternate;
+        }
+        @keyframes borderPulse {
+            0% { box-shadow: 0 0 5px rgba(0, 243, 255, 0.1); }
+            100% { box-shadow: 0 0 20px rgba(0, 243, 255, 0.4); }
+        }
+
+        /* Cyber Card Style */
+        .cyber-card {
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #333;
+            position: relative;
+            backdrop-filter: blur(10px);
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+            transition: all 0.3s ease;
+            z-index: 10; /* Above particles */
+        }
+        .cyber-card:hover {
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; border-left: 1px solid #333; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cyber-cyan); }
+
+        /* Checkbox */
+        .cyber-checkbox {
+            width: 18px; height: 18px;
+            border: 2px solid currentColor;
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 12px; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+        }
+        .cyber-checkbox.checked {
+            background: currentColor;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        /* Progress Bar */
+        .progress-segment {
+            height: 100%; width: 4px; margin-right: 2px;
+            background-color: #333; display: inline-block; transition: background-color 0.3s;
+        }
+        .progress-segment.active {
+            box-shadow: 0 0 5px currentColor;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Floating Particles Background -->
+    <div class="cyber-particles" id="particles"></div>
+
+    <!-- Scan Beam -->
+    <div class="cyber-scan-beam"></div>
+
+    <!-- Header -->
+    <div class="max-w-5xl mx-auto mb-10 border-b border-gray-800 pb-6 relative z-10">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-2 glitch-hover cursor-default">
+                    CYBERSEC<span class="text-xs align-top ml-2 text-gray-500">v.2.0.5</span>
+                </h1>
+                <p class="text-cyan-500/70 tracking-widest text-sm uppercase">>> Learning Protocol Initialized</p>
+            </div>
+            <div class="hidden md:block text-right">
+                <div class="text-xs text-gray-500">SYSTEM STATUS</div>
+                <div class="text-green-400 font-bold animate-pulse">ONLINE [SECURE]</div>
+            </div>
+        </div>
+        <div class="absolute bottom-0 right-0 w-32 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+    </div>
+
+    <div id="app" class="max-w-5xl mx-auto space-y-8 relative z-10">
+        <!-- Content Injected Here -->
+    </div>
+
+    <script>
+        // --- 1. GENERATE BACKGROUND PARTICLES ---
+        const particlesContainer = document.getElementById('particles');
+        const symbols = ['0', '1', '{', '}', '<', '>', '/', '\\', '#'];
+        const colors = ['rgba(0, 243, 255, 0.15)', 'rgba(255, 0, 60, 0.15)', 'rgba(188, 19, 254, 0.15)'];
+
+        for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div');
+            p.classList.add('particle');
+            p.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            p.style.animationDelay = (Math.random() * 5) + 's';
+            p.style.color = colors[Math.floor(Math.random() * colors.length)];
+            particlesContainer.appendChild(p);
+        }
+
+        // --- 2. DATA STRUCTURE ---
+        // CHANGE ORDER: General Programming (C++ before Python) moved ABOVE Web Programming
+        const initialBasicsSection = {
+            id: 'basics',
+            title: 'Basics',
+            subtitle: 'Foundational courses',
+            orderLabel: '1ST_PHASE',
+            color: 'cyan',
+            icon: 'cpu',
+            categories: [
+                {
+                    id: 'computer-science',
+                    title: 'Computer Science',
+                    icon: 'cpu',
+                    color: 'cyan',
+                    courses: [
+                        { id: 'cs-1', title: 'CompTIA A+', link: 'https://www.youtube.com/playlist?list=PLH-n8YK76vIiDdOMRB-ylvns-_8Zl1euV', completed: false }
+                    ],
+                },
+                {
+                    id: 'networking',
+                    title: 'Networking',
+                    icon: 'network',
+                    color: 'cyan',
+                    courses: [
+                        { id: 'net-1', title: 'CompTIA Network+', link: 'https://www.youtube.com/playlist?list=PLH-n8YK76vIiDdOMRB-ylvns-_8Zl1euV', completed: false },
+                        { id: 'net-2', title: 'CCNA', link: 'https://www.youtube.com/playlist?list=PLy1Fx2HfcmWBpD_PI4AQpjeDK5-5q6TG7', completed: false }
+                    ],
+                },
+                {
+                    id: 'system-admin',
+                    title: 'System Administration',
+                    icon: 'terminal',
+                    color: 'cyan',
+                    courses: [
+                        { id: 'sys-1', title: 'Windows Server 2019', link: 'https://www.youtube.com/playlist?list=PLDxVq3TlR9y2sMXaL_yLp-r6pUpevgC-w', completed: false },
+                        { id: 'sys-2', title: 'Linux System Administration', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAx3kiplQR_oeDqLDBUDYwVv', completed: false },
+                        { id: 'sys-3', title: 'Windows Commands / PowerShell', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAy41u35AqJUrI-H83DObUDq', completed: false }
+                    ],
+                },
+                {
+                    id: 'programming',
+                    title: 'Programming',
+                    icon: 'code',
+                    color: 'cyan',
+                    subCategories: [
+                        // --- GENERAL FIRST, C++ BEFORE PYTHON ---
+                        {
+                            id: 'general-programming',
+                            title: 'General Programming',
+                            icon: 'braces',
+                            courses: [
+                                { id: 'gp-3', title: 'C++', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAzjsz06gkzlSrlev53MGIKe', completed: false },
+                                { id: 'gp-1', title: 'Python', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAyE_gei5d18qkfIe-Z8mocs', completed: false },
+                                { id: 'gp-2', title: 'Problem Solving', link: 'https://youtu.be/N-WPYk417yE?si=n82BssSqIhK0mS0y', completed: false },
+                                { id: 'gp-4', title: 'Problem Solving', link: 'https://youtu.be/6hgBFDTTwEk?si=4G4jyeOjMh5lencf', completed: false }
+                            ],
+                        },
+                        // --- WEB SECOND ---
+                        {
+                            id: 'web-programming',
+                            title: 'Web Programming',
+                            icon: 'file-code',
+                            courses: [
+                                { id: 'wp-1', title: 'Crash Course', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAx3kiplQR_oeDqLDBUDYwVv', completed: false },
+                                { id: 'wp-2', title: 'HTML', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAwy-rS6WKudwVeb_x63EzgS', completed: false },
+                                { id: 'wp-3', title: 'CSS', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAxCjHi-HIfNoZrMkfbuvVDY', completed: false },
+                                { id: 'wp-4', title: 'JavaScript', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAx4CCOP--TR36SfD5g7gru', completed: false },
+                                { id: 'wp-5', title: 'PHP', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAw_t_XWUFbBX-c9MafPk9ji', completed: false },
+                                { id: 'wp-6', title: 'MySQL', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAypWmEHEy3awR6Ek9sUe5ZS', completed: false },
+                                { id: 'wp-7', title: 'CRUD', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAypWmEHEy3awR6Ek9sUe5ZS', completed: false },
+                                { id: 'wp-8', title: 'Secure Web App', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAypWmEHEy3awR6Ek9sUe5ZS', completed: false }
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+
+        const initialPentestSection = {
+            id: 'pentest',
+            title: 'Penetration Testing',
+            subtitle: 'Advanced security protocols',
+            orderLabel: '2ND_PHASE',
+            color: 'red',
+            icon: 'shield',
+            categories: [
+                {
+                    id: 'security-basics',
+                    title: 'Security Basics',
+                    icon: 'shield',
+                    color: 'red',
+                    courses: [
+                        { id: 'sec-1', title: 'Security+ SY0-601 Prep', link: 'https://www.youtube.com/playlist?list=PLv7cogHXoVhXvHPzIl1dWtBiYUAL8baHj', completed: false }
+                    ],
+                },
+                {
+                    id: 'pentesting',
+                    title: 'Penetration Testing',
+                    icon: 'lock',
+                    color: 'red',
+                    courses: [
+                        { id: 'pen-1', title: 'eJPTv1 Prep', link: 'https://www.youtube.com/watch?v=MFanMkTGJSo', completed: false },
+                        { id: 'pen-2', title: 'Web Application Penetration Testing Course', link: 'https://netriders.academy/courses/penetration-testing-student', completed: false }
+                    ],
+                },
+                {
+                    id: 'wapt',
+                    title: 'WAPT',
+                    icon: 'bug',
+                    color: 'red',
+                    courses: [
+                        { id: 'wapt-1', title: 'Web App Basics + Burp Suite + ZAP', link: 'https://www.youtube.com/playlist?list=PLX621demLUSaA7ngeN7UfVzYJihHnEfv0', completed: false },
+                        { id: 'wapt-2', title: 'Crash Course', link: 'https://www.youtube.com/playlist?list=PLDoPjvoNmBAypWmEHEy3awR6Ek9sUe5ZS', completed: false },
+                        { id: 'wapt-3', title: 'WAPT Course', link: 'https://www.youtube.com/playlist?list=PL5dZpxpUkHPOeYRHNLOCapZssjgwG6lVr', completed: false }
+                    ],
+                },
+                {
+                    id: 'oscp',
+                    title: 'OSCP',
+                    icon: 'zap',
+                    color: 'red',
+                    courses: [
+                        { id: 'oscp-1', title: 'OSCP', link: 'https://www.youtube.com/playlist?list=PLZmPGUyBFvUrvoa-NYzcUWFpxoZR11id_', completed: false }
+                    ],
+                },
+                {
+                    id: 'active-directory',
+                    title: 'ActiveDirectory',
+                    icon: 'terminal',
+                    color: 'red',
+                    courses: [
+                        { id: 'ad-1', title: 'ActiveDirectory-101', link: 'https://www.youtube.com/watch?v=6GPZthxEKU0', completed: false }
+                    ],
+                },
+            ],
+        };
+
+        const initialMonitoringSection = {
+            id: 'monitoring',
+            title: 'Continuous Monitoring',
+            subtitle: 'Security monitoring & assessment',
+            orderLabel: '3RD_PHASE',
+            color: 'purple',
+            icon: 'activity',
+            categories: [
+                {
+                    id: 'owasp',
+                    title: 'OWASP Top 10',
+                    icon: 'eye',
+                    color: 'purple',
+                    courses: [
+                        { id: 'owasp-1', title: 'OWASP Top 10 2025', link: 'https://owasp.org/Top10/2025/', completed: false }
+                    ],
+                },
+            ],
+        };
+
+        // --- 3. LOGIC ---
+        let sections = [initialBasicsSection, initialPentestSection, initialMonitoringSection];
+        let collapsedCategories = {};
+
+        const getCourses = (cat) => cat.courses ? cat.courses : (cat.subCategories ? cat.subCategories.flatMap(s => s.courses || []) : []);
+        const getAllCourses = (sec) => sec.categories.flatMap(getCourses);
+        const calcProgress = (arr) => arr.length ? Math.round((arr.filter(c => c.completed).length / arr.length) * 100) : 0;
+
+        const theme = (color) => ({
+            cyan: { border: 'border-cyan-500/50', text: 'text-cyan-400', bg: 'bg-cyan-500/10', glow: 'shadow-[0_0_15px_rgba(0,243,255,0.15)]', pulse: 'border-cyan-400' },
+            red: { border: 'border-red-500/50', text: 'text-red-500', bg: 'bg-red-500/10', glow: 'shadow-[0_0_15px_rgba(255,0,60,0.15)]', pulse: 'border-red-400' },
+            purple: { border: 'border-purple-500/50', text: 'text-purple-400', bg: 'bg-purple-500/10', glow: 'shadow-[0_0_15px_rgba(188,19,254,0.15)]', pulse: 'border-purple-400' }
+        }[color]);
+
+        const toggleCollapse = (id) => { collapsedCategories[id] = !collapsedCategories[id]; render(); };
+        
+        const toggleCourse = (cId, sId) => {
+            const sec = sections.find(s => s.id === sId);
+            sec.categories.forEach(c => {
+                const course = c.courses?.find(x => x.id === cId);
+                if (course) course.completed = !course.completed;
+                else if (c.subCategories) {
+                    c.subCategories.forEach(s => {
+                        const subCourse = s.courses?.find(x => x.id === cId);
+                        if (subCourse) subCourse.completed = !subCourse.completed;
+                    });
+                }
+            });
+            render();
+        };
+
+        const renderCyberProgress = (percent, colorClass) => {
+            const totalSegments = 20;
+            const activeSegments = Math.round((percent / 100) * totalSegments);
+            let html = '<div class="flex h-3 w-full bg-gray-900 border border-gray-700 p-0.5 overflow-hidden">';
+            for(let i = 0; i < totalSegments; i++) {
+                const isActive = i < activeSegments;
+                html += `<div class="progress-segment flex-1 ${isActive ? colorClass + ' bg-current' : 'bg-gray-800'}"></div>`;
+            }
+            html += '</div>';
+            return html;
+        };
+
+        const render = () => {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+
+            sections.forEach(sec => {
+                const styles = theme(sec.color);
+                const courses = getAllCourses(sec);
+                const progress = calcProgress(courses);
+
+                const card = document.createElement('div');
+                card.className = `cyber-card ${styles.border} ${styles.glow} pulse-border p-0 overflow-hidden mb-8`;
+
+                // Header
+                card.innerHTML = `
+                    <div class="p-6 border-b border-gray-800 flex justify-between items-center relative">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-${sec.color}-500 to-transparent opacity-20"></div>
+                        <div class="flex items-center z-10">
+                            <div class="p-3 border ${styles.border} ${styles.bg} text-current mr-4 rounded-sm">
+                                <i data-lucide="${sec.icon}" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold ${styles.text} glitch-hover cursor-default">${sec.title}</h2>
+                                <div class="text-xs text-gray-500 uppercase tracking-widest mt-1">${sec.subtitle} // ${sec.orderLabel}</div>
+                            </div>
+                        </div>
+                        <div class="text-right hidden sm:block">
+                            <div class="text-4xl font-black ${styles.text} animate-pulse">${progress}%</div>
+                            <div class="text-xs ${styles.text} opacity-70">COMPLETION</div>
+                        </div>
+                    </div>
+                `;
+
+                const body = document.createElement('div');
+                body.className = 'p-6';
+
+                sec.categories.forEach(cat => {
+                    const catCourses = getCourses(cat);
+                    const catProg = calcProgress(catCourses);
+                    const isCollapsed = collapsedCategories[cat.id];
+
+                    const catBox = document.createElement('div');
+                    catBox.className = 'mb-6 last:mb-0 border border-gray-800 bg-gray-900/30';
+
+                    catBox.innerHTML = `
+                        <div class="p-4 cursor-pointer hover:bg-white/5 flex justify-between items-center transition-colors" onclick="toggleCollapse('${cat.id}')">
+                            <div class="flex items-center">
+                                <i data-lucide="${isCollapsed ? 'chevron-down' : 'chevron-up'}" class="w-4 h-4 text-gray-500 mr-3"></i>
+                                <div class="font-bold ${styles.text}">${cat.title}</div>
+                            </div>
+                            <div class="text-xs font-mono text-gray-400 border border-gray-700 px-2 py-1">${catProg}%</div>
+                        </div>
+                    `;
+
+                    if (!isCollapsed) {
+                        const list = document.createElement('div');
+                        list.className = 'border-t border-gray-800 bg-black/20';
+                        
+                        const renderItem = (c) => {
+                            const row = document.createElement('div');
+                            row.className = 'p-4 border-b border-gray-800/50 hover:bg-white/5 transition-colors flex items-center justify-between group';
+                            const colorStyle = c.completed ? `border-current text-current ${styles.text}` : 'border-gray-600 text-gray-600';
+                            const textStyle = c.completed ? styles.text + ' font-bold' : 'text-gray-400';
+                            
+                            row.innerHTML = `
+                                <div class="flex items-center cursor-pointer flex-1" onclick="toggleCourse('${c.id}', '${sec.id}')">
+                                    <div class="cyber-checkbox ${c.completed ? 'checked' : ''} ${colorStyle}">
+                                        ${c.completed ? '<i data-lucide="check" class="w-3 h-3 text-black font-bold"></i>' : ''}
+                                    </div>
+                                    <span class="text-sm ${textStyle} group-hover:text-white transition-colors">${c.title}</span>
+                                </div>
+                                <a href="${c.link}" target="_blank" class="p-2 text-gray-600 hover:text-cyan-400 transition-colors" title="EXECUTE_LINK">
+                                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                                </a>
+                            `;
+                            return row;
+                        };
+
+                        if (cat.courses) {
+                            cat.courses.forEach(c => list.appendChild(renderItem(c)));
+                        }
+                        if (cat.subCategories) {
+                            cat.subCategories.forEach(sub => {
+                                const subHeader = document.createElement('div');
+                                subHeader.className = 'px-4 py-2 bg-gray-900/60 text-xs text-gray-500 font-bold tracking-wider uppercase border-b border-gray-800';
+                                subHeader.innerHTML = `>> ${sub.title}`;
+                                list.appendChild(subHeader);
+                                sub.courses.forEach(c => list.appendChild(renderItem(c)));
+                            });
+                        }
+                        catBox.appendChild(list);
+                    }
+                    body.appendChild(catBox);
+                });
+
+                // Footer Progress
+                body.innerHTML += `
+                    <div class="mt-6 pt-4 border-t border-gray-800">
+                        <div class="flex justify-between text-xs text-gray-500 mb-2 uppercase tracking-widest">
+                            <span>Module Integrity</span>
+                            <span>${progress}% Synchronized</span>
+                        </div>
+                        ${renderCyberProgress(progress, styles.text)}
+                    </div>
+                `;
+
+                card.appendChild(body);
+                app.appendChild(card);
+            });
+            lucide.createIcons();
+        };
+
+        render();
+
+    </script>
+</body>
+</html>
